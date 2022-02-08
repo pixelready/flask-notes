@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block pagetitle %}User Profile Information{% endblock %}
+
+{% block content %}
+
+
+<h1> Welcome, {{current_user.first_name}} {{current_user.last_name}}</h1>
+
+    <div>Username: {{current_user.username}}</div>
+    <div>Email: {{current_user.email}}</div>
+    <div>First Name: {{current_user.first_name}}</div>
+    <div>Last Name: {{current_user.last_name}}</div>
+  {% endblock %}

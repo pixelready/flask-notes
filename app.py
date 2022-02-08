@@ -2,6 +2,7 @@ from flask import Flask, flash, render_template, request, redirect, jsonify, ses
 from flask_debugtoolbar import DebugToolbarExtension
 from forms import RegisterUser, LoginUser
 from models import connect_db, db, User
+# raise Exception("Hello!")
 
 # Q: is __name__ also a magic name?
 app = Flask(__name__)
@@ -51,7 +52,7 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
-        return redirect("/")
+        return redirect("/login")
 
     else:
         return render_template("register_user.html", form=form)
@@ -68,20 +69,40 @@ def login():
         if User.authenticate_user(username, password):
             session["user_id"] = username
 
-            return redirect("/secret")
+            return redirect(f"/users/{username}")
         else:
             form.username.errors = ["Bad username / password"]
 
     else:
         return render_template("login_user.html", form=form)
 
+# Old, defunct route
+# @app.get("/secret")
+# def display_sooper_secret_page():
+#     """Let authenticed Users into the secret chamber"""
 
-@app.get("/secret")
-def display_sooper_secret_page():
-    """Let authenticed Users into the secret chamber"""
+#     if session.get("user_id"):
+#         return render_template("secret.html")
+#     else:
+#         flash("Nice try, pleb.")
+#         return redirect("/")
 
-    if session.get("user_id"):
-        return render_template("secret.html")
+
+@app.get("/users/<username>")
+def display_user_profile(username):
+    """ Displays information about current logged in user"""
+
+    current_user = User.query.get(username)
+
+    if session["user_id"] == username:
+
+        return render_template("user_profile.html", current_user=current_user)
+
+    elif session["user_id"] and session["user_id"] != username:
+
+        redirect_user =  session["user_id"]
+
+        return redirect(f"/users/{redirect_user}")
+
     else:
-        flash("Nice try, pleb.")
-        return redirect("/")
+        return redirect("/login")
