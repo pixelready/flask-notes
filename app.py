@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, jsonify, session
+from flask import Flask, flash, render_template, request, redirect, jsonify, session
 from flask_debugtoolbar import DebugToolbarExtension
 from forms import RegisterUser, LoginUser
 from models import connect_db, db, User
@@ -57,7 +57,7 @@ def register():
         return render_template("register_user.html", form=form)
 
 
-@app.route("/login", methods=['GET', 'POST'])
+@app.route("/login", methods=["GET", "POST"])
 def login():
     form = LoginUser()
 
@@ -75,7 +75,13 @@ def login():
     else:
         return render_template("login_user.html", form=form)
 
-# @app.get("/secret")
-# def display():
 
-#     return "You made it!"
+@app.get("/secret")
+def display_sooper_secret_page():
+    """Let authenticed Users into the secret chamber"""
+
+    if session.get("user_id"):
+        return render_template("secret.html")
+    else:
+        flash("Nice try, pleb.")
+        return redirect("/")
