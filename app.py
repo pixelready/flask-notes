@@ -1,6 +1,6 @@
-from flask import Flask, render_template, request, redirect, jsonify
+from flask import Flask, render_template, request, redirect, jsonify, session
 from flask_debugtoolbar import DebugToolbarExtension
-from forms import RegisterUser
+from forms import RegisterUser, LoginUser
 from models import connect_db, db, User
 
 # Q: is __name__ also a magic name?
@@ -57,8 +57,23 @@ def register():
         return render_template("register_user.html", form=form)
 
 
-# @app.route("/login", methods=['GET','POST'])
-# def login():
+@app.route("/login", methods=['GET', 'POST'])
+def login():
+    form = LoginUser()
+
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+
+        if User.authenticate_user(username, password):
+            session["user_id"] = username
+
+            return redirect("/secret")
+        else:
+            form.username.errors = ["Bad username / password"]
+
+    else:
+        return render_template("login_user.html", form=form)
 
 # @app.get("/secret")
 # def display():

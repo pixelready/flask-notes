@@ -2,10 +2,13 @@ from enum import unique
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 
+
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 
 # Q: is connect_db a "magic name"?
+
+
 def connect_db(app):
     """Connect to the DB."""
 
@@ -31,3 +34,18 @@ class User(db.Model):
         hashed = bcrypt.generate_password_hash(password).decode("utf8")
 
         return cls(username=username, password=hashed)
+
+    @classmethod
+    def authenticate_user(cls, username, password):
+        """Authenticate a user"""
+
+        current_user = User.query.filter_by(username=username).one_or_none()
+
+        if current_user and bcrypt.check_password_hash(
+            current_user.password,
+            password):
+
+            return current_user
+
+        else:
+            return False

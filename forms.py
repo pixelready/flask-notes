@@ -12,3 +12,9 @@ class RegisterUser(FlaskForm):
     email = StringField("Email", validators=[validators.DataRequired()])
     first_name = StringField("First Name", validators=[validators.DataRequired()])
     last_name = StringField("Last Name", validators=[validators.DataRequired()])
+
+class LoginUser(FlaskForm):
+    """Form to login user with username, password"""
+
+    username = StringField("Username", validators=[validators.DataRequired()])
+    password = PasswordField("Password", validators=[validators.DataRequired()])
