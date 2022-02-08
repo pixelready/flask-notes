@@ -1,10 +1,6 @@
-
-
-
-from crypt import methods
-from operator import methodcaller
 from flask import Flask, render_template, request, redirect, jsonify
 from flask_debugtoolbar import DebugToolbarExtension
+from forms import RegisterUser
 from models import connect_db, db, User
 
 # Q: is __name__ also a magic name?
@@ -15,32 +11,56 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ECHO"] = True
 
 # TODO: move to .env
-app.config["SECRET_KEY"]= "shhhhhh don't tell"
+app.config["SECRET_KEY"] = "shhhhhh don't tell"
 app.debug = True
 toolbar = DebugToolbarExtension(app)
 
 connect_db(app)
+db.create_all()
 
 # --------------
 
+
 @app.get("/")
 def homepage():
+    return redirect("/register")
 
 
-# User routes below
+# User routes below ##########################################################
 
-@app.route("/register", methods=['GET','POST'])
+
+@app.route("/register", methods=["GET", "POST"])
 def register():
 
     # TODO: form template and html
+    form = RegisterUser()
+
+    if form.validate_on_submit():
+        # Q: how do we do some fancy decompose footwork for this?
+        username = form.username.data
+        password = form.password.data
+        first_name = form.first_name.data
+        last_name = form.last_name.data
+        email = form.email.data
+
+        new_user = User.register_user(username, password)
+        new_user.first_name = first_name
+        new_user.last_name = last_name
+        new_user.email = email
+
+        db.session.add(new_user)
+        db.session.commit()
+
+        return redirect("/")
+
+    else:
+        return render_template("register_user.html", form=form)
 
 
-    return render_template("XYZ.html", form=form)
+# @app.route("/login", methods=['GET','POST'])
+# def login():
 
-@app.route("/login", methods=['GET','POST'])
-def login():
+# @app.get("/secret")
+# def display():
 
-@app.get("/secret")
-def display():
-
-    return "You made it!"
+#     return "You made it!"
