@@ -8,6 +8,8 @@ class RegisterUser(FlaskForm):
 
     username = StringField("Username", validators=[validators.DataRequired()])
     password = PasswordField("Password", validators=[validators.DataRequired()])
+
+    # CR: install the email validator (WTForm lecture will have notes on this)
     email = StringField("Email", validators=[validators.DataRequired()])
     first_name = StringField("First Name", validators=[validators.DataRequired()])
     last_name = StringField("Last Name", validators=[validators.DataRequired()])

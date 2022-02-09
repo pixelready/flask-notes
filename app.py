@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, render_template, request, redirect, session, flash
 from flask_debugtoolbar import DebugToolbarExtension
 from forms import OnlyCSRF, RegisterUser, LoginUser
 from models import connect_db, db, User
@@ -33,9 +33,11 @@ def homepage():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    # CR: TODO: ADD SOME DOCSTRINGS
 
-    # TODO: form template and html
-    form = RegisterUser()
+    # CR: Redirect elsewhere if user is already in session and logged in
+
+    form = RegisterUser() # CR: Rename this to RegisterUser Form so its clear
 
     if form.validate_on_submit():
         # Q: how do we do some fancy decompose footwork for this?
@@ -45,15 +47,23 @@ def register():
         last_name = form.last_name.data
         email = form.email.data
 
+
+        # CR: Pass in all the keyword arguments when we register our user
         new_user = User.register_user(username, password)
         new_user.first_name = first_name
         new_user.last_name = last_name
         new_user.email = email
 
+        if User.query.filter_by(username=username).one_or_none():
+            form.username.errors = ["User already exists"]
+            return render_template("register_user.html", form=form)
+
         db.session.add(new_user)
         db.session.commit()
 
-        return redirect("/login")
+        # CR: Go ahead and add the user to the session here
+
+        return redirect("/login") #CR: redirect to /users/username
 
     else:
         return render_template("register_user.html", form=form)
@@ -61,9 +71,12 @@ def register():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    # CR: DOC STRINGS
+    # CR: do we have user id in session? otherwise redirect to their page
+
     form = LoginUser()
 
-    if form.validate_on_submit():
+    if form.validate_on_submit(): # CR: this handles if something is POST or GET
         username = form.username.data
         password = form.password.data
 
@@ -95,6 +108,9 @@ def login():
 def display_user_profile(username):
     """Displays information about current logged in user"""
 
+    # CR: if user id is not in the session OR username doesn't match the user id 
+    # in session, they're unauthorized to be here (guard condition OR fail fast)
+
     current_user = User.query.get(username)
     form = OnlyCSRF()
 
@@ -108,6 +124,9 @@ def display_user_profile(username):
 
         redirect_user = session.get("user_id")
 
+        # CR: Raise an unauthorized error/page. Don't be so nice.
+        # CR: "from werkzeug.exceptions import Unauthorized"
+
         return redirect(f"/users/{redirect_user}")
 
     else:
@@ -117,9 +136,15 @@ def display_user_profile(username):
 @app.post("/logout")
 def logout_current_user():
     """Delete the user from the current session and redirect to homepage"""
-
-    if OnlyCSRF(request.form).validate_on_submit() and session.get("user_id"):
+    form = OnlyCSRF()
+    if form.validate_on_submit(): #CR: Knows that it was a POST request
         session.pop("user_id", None)
-        return redirect("/")
+        return redirect("/login")
+
+
+    # if OnlyCSRF(request.form).validate_on_submit() and session.get("user_id"):
+    #     session.pop("user_id", None)
+    #     return redirect("/")
     else:
+        # CR: Raise another unauthorized error here
         return redirect("/")
