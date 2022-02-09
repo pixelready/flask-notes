@@ -1,7 +1,8 @@
-from flask import Flask, flash, render_template, request, redirect, jsonify, session
+from flask import Flask, render_template, request, redirect, session
 from flask_debugtoolbar import DebugToolbarExtension
-from forms import RegisterUser, LoginUser
+from forms import OnlyCSRF, RegisterUser, LoginUser
 from models import connect_db, db, User
+
 # raise Exception("Hello!")
 
 # Q: is __name__ also a magic name?
@@ -72,9 +73,11 @@ def login():
             return redirect(f"/users/{username}")
         else:
             form.username.errors = ["Bad username / password"]
+            return render_template("login_user.html", form=form)
 
     else:
         return render_template("login_user.html", form=form)
+
 
 # Old, defunct route
 # @app.get("/secret")
@@ -90,19 +93,33 @@ def login():
 
 @app.get("/users/<username>")
 def display_user_profile(username):
-    """ Displays information about current logged in user"""
+    """Displays information about current logged in user"""
 
     current_user = User.query.get(username)
+    form = OnlyCSRF()
 
-    if session["user_id"] == username:
+    if session.get("user_id") == username:
 
-        return render_template("user_profile.html", current_user=current_user)
+        return render_template(
+            "user_profile.html", current_user=current_user, form=form
+        )
 
-    elif session["user_id"] and session["user_id"] != username:
+    elif session.get("user_id") and session.get("user_id") != username:
 
-        redirect_user =  session["user_id"]
+        redirect_user = session.get("user_id")
 
         return redirect(f"/users/{redirect_user}")
 
     else:
         return redirect("/login")
+
+
+@app.post("/logout")
+def logout_current_user():
+    """Delete the user from the current session and redirect to homepage"""
+
+    if OnlyCSRF(request.form).validate_on_submit() and session.get("user_id"):
+        session.pop("user_id", None)
+        return redirect("/")
+    else:
+        return redirect("/")

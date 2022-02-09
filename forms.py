@@ -1,7 +1,6 @@
-from wtforms import StringField, TextAreaField, PasswordField, EmailField
+from wtforms import StringField, PasswordField
 from flask_wtf import FlaskForm
 from wtforms import validators
-from wtforms.validators import email_validator
 
 
 class RegisterUser(FlaskForm):
@@ -13,8 +12,13 @@ class RegisterUser(FlaskForm):
     first_name = StringField("First Name", validators=[validators.DataRequired()])
     last_name = StringField("Last Name", validators=[validators.DataRequired()])
 
+
 class LoginUser(FlaskForm):
     """Form to login user with username, password"""
 
     username = StringField("Username", validators=[validators.DataRequired()])
     password = PasswordField("Password", validators=[validators.DataRequired()])
+
+
+class OnlyCSRF(FlaskForm):
+    """Pass a CSRF token to an empty form"""
